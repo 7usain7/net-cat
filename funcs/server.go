@@ -31,5 +31,15 @@ func ServerHandler(port string) {
 }
 
 func Broadcast() {
+	for msg := range chanMessage { // A loop that waits for new messages on the channel
+		// Save message to history
+		serverLogHistory = append(serverLogHistory, msg)
 
+		// Send to all clients
+		clientsMutex.Lock()
+		for _, client := range clients {
+			fmt.Fprintln(client.Conn, msg)
+		}
+		clientsMutex.Unlock()
+	}
 }
