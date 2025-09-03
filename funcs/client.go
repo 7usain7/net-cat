@@ -5,10 +5,20 @@ import (
 	"fmt"
 	"net"
 	"time"
+	"unicode"
 )
 
 func HandleClient(conn net.Conn) { // net.Conn = the network connection between the server and the client
 	defer conn.Close()
+
+	// Check max client limit
+	clientsMutex.Lock()
+	if len(clients) > 10 {
+		clientsMutex.Unlock()
+		fmt.Fprintln(conn, "Server is full. Try again later.")
+		return
+	}
+	clientsMutex.Unlock()
 
 	var clientName string
 
@@ -23,13 +33,13 @@ func HandleClient(conn net.Conn) { // net.Conn = the network connection between 
 
 		clientName = nameScanner.Text()
 
-		if isExist(clientName) {
-			fmt.Fprintln(conn, "Client name exist, please chose diffrent name")
+		if !isValidName(clientName) {
+			fmt.Fprintln(conn, "Invalid name. Please use only printable characters, and max of 30 characters.")
 			continue
 		}
 
-		if len(clientName) > 30 {
-			fmt.Fprintln(conn, "Client name too long, please try again")
+		if isExist(clientName) {
+			fmt.Fprintln(conn, "Client name exist, please chose diffrent name")
 			continue
 		}
 
@@ -66,8 +76,8 @@ func HandleClient(conn net.Conn) { // net.Conn = the network connection between 
 
 		client.message = scanner.Text()
 
-		if len(client.message) > 2000 {
-			fmt.Fprintln(conn, "mesage is too long!, max lenght is 2000 caracter!")
+		if !isValidInput(client.message) {
+			fmt.Fprintln(conn, "ERROR: mesage is too long or have invalid caracters!, max lenght is 2000 caracter")
 			continue
 		}
 
@@ -96,4 +106,28 @@ func isExist(str string) bool {
 		}
 	}
 	return false
+}
+
+func isValidName(name string) bool {
+	if len(name) == 0 || len(name) > 30 {
+		return false
+	}
+	for _, r := range name {
+		if !unicode.IsPrint(r) {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidInput(name string) bool {
+	if len(name) > 2000 {
+		return false
+	}
+	for _, r := range name {
+		if !unicode.IsPrint(r) {
+			return false
+		}
+	}
+	return true
 }
