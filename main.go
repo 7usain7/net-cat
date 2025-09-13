@@ -8,7 +8,7 @@ import (
 
 func main() {
 	if len(os.Args) > 2 {
-		fmt.Println("[USAGE]: go run main.go $port")
+		fmt.Println("[USAGE]: ./TCPChat $port")
 		return
 	} else if len(os.Args) == 2 {
 		funcs.DEFULT_PORT = os.Args[1]
